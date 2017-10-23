@@ -32,8 +32,7 @@ namespace Serilog.Settings.Combined.Tests
             var combined = builder.BuildCombinedEnumerable();
             Assert.Equal(0, consumeCount);
 
-            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed 
-            combined.ToList();
+            var _ = combined.ToList();
 
             Assert.Equal(2, consumeCount);
         }
