@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{C789B5
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
 		Build.ps1 = Build.ps1
 		LICENSE = LICENSE
 		README.md = README.md
