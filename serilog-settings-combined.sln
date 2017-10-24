@@ -7,9 +7,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3A3B400-AD7
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D4CACEEA-2101-42BB-B3AC-16E685850988}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Settings.Combined", "src\Serilog.Settings.Combined\Serilog.Settings.Combined.csproj", "{DA007207-F261-49ED-9ED1-24F709C53E77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Settings.Combined", "src\Serilog.Settings.Combined\Serilog.Settings.Combined.csproj", "{DA007207-F261-49ED-9ED1-24F709C53E77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Settings.Combined.Tests", "test\Serilog.Settings.Combined.Tests\Serilog.Settings.Combined.Tests.csproj", "{20DF8798-4764-4213-BCF9-F0B55FABFDE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Settings.Combined.Tests", "test\Serilog.Settings.Combined.Tests\Serilog.Settings.Combined.Tests.csproj", "{20DF8798-4764-4213-BCF9-F0B55FABFDE9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{C789B57A-16F9-432C-A93D-303C24478DAC}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
+		Build.ps1 = Build.ps1
+		LICENSE = LICENSE
+		README.md = README.md
+		serilog-settings-combined.sln.DotSettings = serilog-settings-combined.sln.DotSettings
+		assets\Serilog.snk = assets\Serilog.snk
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
