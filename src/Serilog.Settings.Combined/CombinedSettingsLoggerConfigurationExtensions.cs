@@ -9,19 +9,19 @@ namespace Serilog
     /// </summary>
     public static class CombinedSettingsLoggerConfigurationExtensions
     {
-        /// <summary>
-        /// Configure the logger from multiple sources of settings specified in the Serilog key-value setting format.
-        /// </summary>
+        /// <summary> 
+        /// Apply settings specified from multiple sources and combine them keeping the last defined value for each key. 
+        /// </summary> 
         /// <param name="lsc">The settings configuration object.</param>
-        /// <param name="build">the operations to execute on the builder to configure other sources of settings.</param>
-        /// <returns>Configuration object allowing method chaining.</returns>
-        public static LoggerConfiguration Combined(this LoggerSettingsConfiguration lsc, Func<IConfigBuilder, IConfigBuilder> build)
+        /// <param name="combine">a callback that allows to add Sources of settings to the configuration</param> 
+        /// <returns>Configuration object allowing method chaining.</returns> 
+        public static LoggerConfiguration Combined(this LoggerSettingsConfiguration lsc, Func<ICombinedSettingsBuilder, ICombinedSettingsBuilder> combine)
         {
-            var configBuilder = new ConfigBuilder();
-            configBuilder = (ConfigBuilder)build(configBuilder);
-            var enumerable = configBuilder.BuildCombinedEnumerable();
+            if (combine == null) throw new ArgumentNullException(nameof(combine));
 
-            return lsc.KeyValuePairs(enumerable);
+            var builder = (CombinedSettingsBuilder)combine(new CombinedSettingsBuilder());
+            var combinedSettings = builder.BuildSettings();
+            return lsc.KeyValuePairs(combinedSettings);
         }
     }
 }
