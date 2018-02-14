@@ -1,4 +1,3 @@
-﻿#if APPSETTINGS
 using System.Linq;
 using Serilog.Events;
 using Serilog.Tests.Support;
@@ -7,23 +6,33 @@ using Xunit;
 
 namespace Serilog.Settings.Combined.Tests
 {
-    public class CombinedAppSettingsTests
+    public class CombinedConfigExpressionSettingsTests
     {
-        public CombinedAppSettingsTests()
+        public CombinedConfigExpressionSettingsTests()
         {
             DummyRollingFileSink.Reset();
         }
 
         [Fact]
-        public void CombinedCanMergeSettingsFromMultipleConfigFiles()
+        public void CombinedCanMergeSettingsFromMultipleConfigExpressions()
         {
             LogEvent evt = null;
             var log = new LoggerConfiguration()
                 .ReadFrom.Combined(builder => builder
-                        .AddAppSettings(filePath: "Samples/Initial.config")
-                        .AddAppSettings(filePath: "Samples/Second.config")
-                        .AddAppSettings(filePath: "Samples/Third.config")
+                    .AddExpression(lc => lc
+                        .MinimumLevel.Verbose()
+                        .Enrich.WithProperty("AppName", "DeclaredInInitial", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile(/*pathFormat*/ null, LogEventLevel.Debug, /*outputTemplate*/ null, /*formatProvider*/ null)
                     )
+                    .AddExpression(lc => lc
+                        .Enrich.WithProperty("ServerName", "DeclaredInSecond", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile(/*pathFormat*/ null, LogEventLevel.Debug, /*outputTemplate*/ "DefinedInSecond", /*formatProvider*/null)
+                    )
+                    .AddExpression(lc => lc
+                        .Enrich.WithProperty("AppName", "OverridenInThird", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile(/*pathFormat*/ "DefinedInThird", LogEventLevel.Debug, /*outputTemplate*/ null, /*formatProvider*/null)
+                    )
+                )
                 .WriteTo.Sink(new DelegatingSink(e => evt = e))
                 .CreateLogger();
 
@@ -38,7 +47,7 @@ namespace Serilog.Settings.Combined.Tests
         }
 
         [Fact]
-        public void CombinedCanMergeAppSettingsWithInMemoryKeyValuePairs()
+        public void CombinedCanMergeConfigExpressionWithInMemoryKeyValuePairs()
         {
             LogEvent evt = null;
             var log = new LoggerConfiguration()
@@ -47,7 +56,10 @@ namespace Serilog.Settings.Combined.Tests
                     .AddKeyValuePair("using:TestDummies", "TestDummies")
                     .AddKeyValuePair("write-to:DummyRollingFile.restrictedToMinimumLevel", "Debug")
                     .AddKeyValuePair("enrich:with-property:AppName", "DeclaredInKeyValuePairs")
-                    .AddAppSettings(filePath: "Samples/Second.config")
+                    .AddExpression(lc => lc
+                        .Enrich.WithProperty("ServerName", "DeclaredInSecond", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile(/*pathFormat*/ null, LogEventLevel.Debug, /*outputTemplate*/ "DefinedInSecond", /*formatProvider*/null)
+                    )
                     .AddKeyValuePair("write-to:DummyRollingFile.pathFormat", "DefinedInKeyValuePairs")
                     .AddKeyValuePair("enrich:with-property:AppName", "OverridenInKeyValuePairs")
                 )
@@ -65,5 +77,3 @@ namespace Serilog.Settings.Combined.Tests
         }
     }
 }
-
-#endif

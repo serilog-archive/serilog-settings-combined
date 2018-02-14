@@ -7,15 +7,25 @@ namespace TestDummies
 {
     public class DummyRollingFileSink : ILogEventSink
     {
-        [ThreadStatic]
-        // ReSharper disable ThreadStaticFieldHasInitializer
-        public static List<LogEvent> Emitted = new List<LogEvent>();
-        // ReSharper restore ThreadStaticFieldHasInitializer
-
         public DummyRollingFileSink(string pathFormat, string outputTemplate)
         {
             PathFormat = pathFormat;
             OutputTemplate = outputTemplate;
+        }
+
+        [ThreadStatic]
+        static List<LogEvent> _emitted;
+
+        public static List<LogEvent> Emitted
+        {
+            get
+            {
+                if (_emitted == null)
+                {
+                    _emitted = new List<LogEvent>();
+                }
+                return _emitted;
+            }
         }
 
         [ThreadStatic]
@@ -27,6 +37,13 @@ namespace TestDummies
         public void Emit(LogEvent logEvent)
         {
             Emitted.Add(logEvent);
+        }
+
+        public static void Reset()
+        {
+            _emitted = null;
+            OutputTemplate = null;
+            PathFormat = null;
         }
     }
 }
