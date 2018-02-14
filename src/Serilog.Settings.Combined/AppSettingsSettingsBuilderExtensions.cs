@@ -1,4 +1,4 @@
-﻿#if NET45
+﻿#if APPSETTINGS
 using System;
 using Serilog.Settings.AppSettings;
 using Serilog.Settings.Combined;

@@ -35,4 +35,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <DefineConstants>$(DefineConstants);APPSETTINGS</DefineConstants>
+  </PropertyGroup>
+
 </Project>
