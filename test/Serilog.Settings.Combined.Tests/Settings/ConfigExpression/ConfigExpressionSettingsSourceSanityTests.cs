@@ -18,7 +18,7 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                 .MinimumLevel.Warning();
 
             LogEvent evt = null;
-            TestThatReadFromExpressionBehavesTheSameAsLogginConfig(expressionToTest,
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
                 arrange: lc =>
                {
                    evt = null;
@@ -42,7 +42,7 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                 .MinimumLevel.Override("System", LogEventLevel.Warning);
 
             LogEvent evt = null;
-            TestThatReadFromExpressionBehavesTheSameAsLogginConfig(expressionToTest,
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
                 arrange: lc =>
                 {
                     evt = null;
@@ -67,9 +67,34 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                 });
         }
 
+        [Fact]
+        public void PropertyEnrichment()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .MinimumLevel.Verbose()
+                .Enrich.WithProperty("Property1", "PropertyValue1", /*destructureObjects*/ false)
+                .Enrich.WithProperty("Property2", "PropertyValue2", /*destructureObjects*/ false);
+
+            LogEvent evt = null;
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc =>
+                {
+                    evt = null;
+                    return lc.WriteTo.Sink(new DelegatingSink(e => evt = e));
+                },
+                test: (testCase, logger) =>
+                {
+                    logger.Write(Some.InformationEvent());
+                    Assert.NotNull(evt);
+                    Assert.Equal("PropertyValue1", evt.Properties["Property1"].LiteralValue());
+                    Assert.Equal("PropertyValue2", evt.Properties["Property2"].LiteralValue());
+
+                });
+        }
 
 
-        void TestThatReadFromExpressionBehavesTheSameAsLogginConfig(
+
+        void TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(
             ConfigExpr expressionToTest,
             Func<LoggerConfiguration, LoggerConfiguration> arrange,
             Action<string, Logger> test
