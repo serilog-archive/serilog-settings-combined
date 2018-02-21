@@ -24,24 +24,12 @@ namespace Serilog.Settings.ConfigExpression
 {
     class ConfigExpressionSettingsSource
     {
-        const string UsingDirective = "using";
-        const string LevelSwitchDirective = "level-switch";
-        const string AuditToDirective = "audit-to";
-        const string WriteToDirective = "write-to";
-        const string MinimumLevelDirective = "minimum-level";
-        const string MinimumLevelControlledByDirective = "minimum-level:controlled-by";
-        const string EnrichWithDirective = "enrich";
-        const string EnrichWithPropertyDirective = "enrich:with-property";
-        const string FilterDirective = "filter";
-
         MethodCallExpression _methodCallExpression;
 
         public ConfigExpressionSettingsSource(Expression<Func<LoggerConfiguration, LoggerConfiguration>> expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            if (!(expression.Body is MethodCallExpression))
-                throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");
-            _methodCallExpression = (MethodCallExpression)expression.Body;
+            _methodCallExpression = expression.Body as MethodCallExpression ?? throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetKeyValuePairs()
@@ -87,7 +75,7 @@ namespace Serilog.Settings.ConfigExpression
 
                             yield return new List<KeyValuePair<string, string>>
                             {
-                                new KeyValuePair<string, string>($"{MinimumLevelDirective}:override:{overrideNamespace}", overrideLevel)
+                                new KeyValuePair<string, string>(SettingsDirectives.MinimumLevelOverride(overrideNamespace), overrideLevel)
                             };
                             continue;
                         }
@@ -95,7 +83,7 @@ namespace Serilog.Settings.ConfigExpression
                             throw new NotImplementedException($"Not supported : MinimumLevel.{methodName}");
                         yield return new List<KeyValuePair<string, string>>
                         {
-                            new KeyValuePair<string, string>(MinimumLevelDirective, minimumLevel.ToString())
+                            new KeyValuePair<string, string>(SettingsDirectives.MinimumLevel, minimumLevel.ToString())
                         };
                         continue;
                     case nameof(LoggerConfiguration.Enrich):
@@ -106,21 +94,21 @@ namespace Serilog.Settings.ConfigExpression
                             var enrichmentValue = ExtractStringValue(enrichWithArgument);
                             yield return new List<KeyValuePair<string, string>>
                             {
-                                new KeyValuePair<string, string>($"{EnrichWithPropertyDirective}:{enrichPropertyName}", enrichmentValue)
+                                new KeyValuePair<string, string>(SettingsDirectives.EnrichWithProperty(enrichPropertyName), enrichmentValue)
                             };
                             continue;
                         }
                         else
                         {
-                            yield return SerializeMethodInvocation(EnrichWithDirective, methodCall);
+                            yield return SerializeMethodInvocation(MethodInvocationType.Enrich, methodCall);
                             continue;
 
                         }
                     case nameof(LoggerConfiguration.WriteTo):
-                        yield return SerializeMethodInvocation(WriteToDirective, methodCall);
+                        yield return SerializeMethodInvocation(MethodInvocationType.WriteTo, methodCall);
                         continue;
                     case nameof(LoggerConfiguration.AuditTo):
-                        yield return SerializeMethodInvocation(AuditToDirective, methodCall);
+                        yield return SerializeMethodInvocation(MethodInvocationType.AuditTo, methodCall);
                         continue;
                     default:
                         throw new NotSupportedException($"Not supported : LoggerConfiguration.{leftSide.Member.Name}");
@@ -128,7 +116,7 @@ namespace Serilog.Settings.ConfigExpression
             }
         }
 
-        static List<KeyValuePair<string, string>> SerializeMethodInvocation(string directivePrefix, MethodCallExpression methodCall)
+        static List<KeyValuePair<string, string>> SerializeMethodInvocation(MethodInvocationType methodInvocationType, MethodCallExpression methodCall)
         {
             // this is probably an extension method 
             var methodArguments = methodCall.Arguments;
@@ -140,7 +128,7 @@ namespace Serilog.Settings.ConfigExpression
             var assemblyShortName = enrichAssembly.GetName().Name;
             if (assemblyShortName != "Serilog")
             {
-                enrichDirectives.Add(new KeyValuePair<string, string>($"{UsingDirective}:{assemblyShortName}", $"{enrichAssembly.FullName}"));
+                enrichDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.Using(assemblyShortName), $"{enrichAssembly.FullName}"));
             }
             var enrichArgs = methodArguments
                 .Zip(method.GetParameters(), (expression, param) => new
@@ -156,14 +144,14 @@ namespace Serilog.Settings.ConfigExpression
                 })
                 .Where(x => x.ParamValue != null);
 
-            var directives2 = enrichArgs.Select(x => new KeyValuePair<string, string>($"{directivePrefix}:{methodName}.{x.ParamName}", x.ParamValue)).ToList();
+            var directives2 = enrichArgs.Select(x => new KeyValuePair<string, string>(SettingsDirectives.MethodInvocationParameter(methodInvocationType, methodName, x.ParamName), x.ParamValue)).ToList();
             if (directives2.Count > 0)
             {
                 enrichDirectives.AddRange(directives2);
             }
             else
             {
-                enrichDirectives.Add(new KeyValuePair<string, string>($"{directivePrefix}:{methodName}", ""));
+                enrichDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.ParameterlessMethodInvocation(methodInvocationType, methodName), ""));
             }
             return enrichDirectives;
         }
