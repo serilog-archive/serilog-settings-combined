@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
+using Serilog.Context;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Tests.Support;
+using TestDummies;
 using Xunit;
 
 using ConfigExpr = System.Linq.Expressions.Expression<System.Func<Serilog.LoggerConfiguration, Serilog.LoggerConfiguration>>;
@@ -71,7 +73,6 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
         public void PropertyEnrichment()
         {
             ConfigExpr expressionToTest = lc => lc
-                .MinimumLevel.Verbose()
                 .Enrich.WithProperty("Property1", "PropertyValue1", /*destructureObjects*/ false)
                 .Enrich.WithProperty("Property2", "PropertyValue2", /*destructureObjects*/ false);
 
@@ -88,7 +89,62 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                     Assert.NotNull(evt);
                     Assert.Equal("PropertyValue1", evt.Properties["Property1"].LiteralValue());
                     Assert.Equal("PropertyValue2", evt.Properties["Property2"].LiteralValue());
+                });
+        }
 
+        [Fact]
+        public void LogContextEnrichment()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .Enrich.FromLogContext();
+
+            LogEvent evt = null;
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc =>
+                {
+                    evt = null;
+                    return lc.WriteTo.Sink(new DelegatingSink(e => evt = e));
+                },
+                test: (testCase, logger) =>
+                {
+                    using (LogContext.PushProperty("Property", "Value1"))
+                    {
+                        logger.Write(Some.InformationEvent());
+                    }
+                    Assert.NotNull(evt);
+                    Assert.Equal("Value1", evt.Properties["Property"].LiteralValue());
+
+                    evt = null;
+
+                    using (LogContext.PushProperty("Property", "Value2"))
+                    {
+                        logger.Write(Some.InformationEvent());
+                    }
+                    Assert.NotNull(evt);
+                    Assert.Equal("Value2", evt.Properties["Property"].LiteralValue());
+                });
+        }
+
+        [Fact]
+        public void ExtensionMethodEnrichment()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .Enrich.WithDummyThreadId()
+                .Enrich.WithDummyUserName("MyUserName");
+
+            LogEvent evt = null;
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc =>
+                {
+                    evt = null;
+                    return lc.WriteTo.Sink(new DelegatingSink(e => evt = e));
+                },
+                test: (testCase, logger) =>
+                {
+                    logger.Write(Some.InformationEvent());
+                    Assert.NotNull(evt);
+                    Assert.Equal("MyUserName", evt.Properties[DummyUserNameEnricher.PropertyName].LiteralValue());
+                    Assert.NotNull(evt.Properties[DummyThreadIdEnricher.PropertyName].LiteralValue());
                 });
         }
 

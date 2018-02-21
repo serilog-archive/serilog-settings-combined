@@ -16,6 +16,11 @@ namespace TestDummies
             return enrich.With(new DummyThreadIdEnricher());
         }
 
+        public static LoggerConfiguration WithDummyUserName(this LoggerEnrichmentConfiguration enrich, string extraParam)
+        {
+            return enrich.With(new DummyUserNameEnricher(extraParam));
+        }
+
         public static LoggerConfiguration DummyRollingFile(
             this LoggerSinkConfiguration loggerSinkConfiguration,
             string pathFormat,
