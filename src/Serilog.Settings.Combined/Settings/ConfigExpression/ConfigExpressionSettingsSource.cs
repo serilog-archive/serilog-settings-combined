@@ -70,6 +70,7 @@ namespace Serilog.Settings.ConfigExpression
                     case nameof(LoggerConfiguration.MinimumLevel):
                         if (methodName == nameof(LoggerMinimumLevelConfiguration.Override))
                         {
+                            // .MinimumLevel.Override(string namespace, LogEventLevel overridenLevel)
                             var overrideNamespace = ((ConstantExpression)methodArguments[0]).Value.ToString();
                             var overrideLevel = ExtractStringValue(methodArguments[1]);
 
@@ -79,6 +80,7 @@ namespace Serilog.Settings.ConfigExpression
                             };
                             continue;
                         }
+                        // .MinimumLevel.Debug(), MinimumLevel.Information() etc ...
                         if (!Enum.TryParse(methodName, out LogEventLevel minimumLevel))
                             throw new NotImplementedException($"Not supported : MinimumLevel.{methodName}");
                         yield return new List<KeyValuePair<string, string>>
@@ -89,6 +91,7 @@ namespace Serilog.Settings.ConfigExpression
                     case nameof(LoggerConfiguration.Enrich):
                         if (methodName == nameof(LoggerEnrichmentConfiguration.WithProperty))
                         {
+                            // .Enrich.WithProperty(string propertyName, object propertyValue, bool destructureObjects)
                             var enrichPropertyName = ((ConstantExpression)methodArguments[0]).Value.ToString();
                             var enrichWithArgument = methodArguments[1];
                             var enrichmentValue = ExtractStringValue(enrichWithArgument);
@@ -100,6 +103,8 @@ namespace Serilog.Settings.ConfigExpression
                         }
                         else
                         {
+                            // method .Enrich.FromLogContext()
+                            // or extension method .Enrich.WithBar(param1, param2)
                             yield return SerializeMethodInvocation(MethodInvocationType.Enrich, methodCall);
                             continue;
 
@@ -118,7 +123,6 @@ namespace Serilog.Settings.ConfigExpression
 
         static List<KeyValuePair<string, string>> SerializeMethodInvocation(MethodInvocationType methodInvocationType, MethodCallExpression methodCall)
         {
-            // this is probably an extension method 
             var methodArguments = methodCall.Arguments;
             var method = methodCall.Method;
             var methodName = method.Name;
@@ -165,10 +169,12 @@ namespace Serilog.Settings.ConfigExpression
                     if (constantExp.Value == null) return null;
                     return $"{constantExp.Value}";
 
+                // a boolean is a UnaryExpression Convert(true), for some reason 
                 case UnaryExpression unaryExp:
                     return $"{unaryExp.Operand}";
 
                 case NewExpression newExp:
+                    // constructor new Uri(string uri)
                     if (newExp.Type == typeof(Uri))
                     {
                         return ((ConstantExpression)newExp.Arguments[0]).Value.ToString();
