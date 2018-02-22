@@ -48,31 +48,18 @@ namespace Serilog.Settings.ConfigExpression
                 var methodCall = (MethodCallExpression)current;
                 var method = methodCall.Method;
                 var methodName = method.Name;
-                MemberExpression leftSide;
-                List<Expression> methodArguments;
-                if (method.IsStatic)
-                {
-                    // extension method 
-                    leftSide = (MemberExpression)methodCall.Arguments[0];
-                    methodArguments = methodCall.Arguments.Skip(1).ToList();
-                }
-                else
-                {
-                    // regular method 
-                    leftSide = (MemberExpression)methodCall.Object;
-                    methodArguments = methodCall.Arguments.ToList();
-                }
+                var (methodTarget, normalizedMethodArguments) = ExtractNormalizedTargetAndArguments(methodCall);
 
-                current = leftSide.Expression;
+                current = methodTarget.Expression;
 
-                switch (leftSide.Member.Name)
+                switch (methodTarget.Member.Name)
                 {
                     case nameof(LoggerConfiguration.MinimumLevel):
                         if (methodName == nameof(LoggerMinimumLevelConfiguration.Override))
                         {
                             // .MinimumLevel.Override(string namespace, LogEventLevel overridenLevel)
-                            var overrideNamespace = ((ConstantExpression)methodArguments[0]).Value.ToString();
-                            var overrideLevel = ExtractStringValue(methodArguments[1]);
+                            var overrideNamespace = ((ConstantExpression)normalizedMethodArguments[0]).Value.ToString();
+                            var overrideLevel = ConvertExpressionToSettingValue(normalizedMethodArguments[1]);
 
                             yield return new List<KeyValuePair<string, string>>
                             {
@@ -92,9 +79,9 @@ namespace Serilog.Settings.ConfigExpression
                         if (methodName == nameof(LoggerEnrichmentConfiguration.WithProperty))
                         {
                             // .Enrich.WithProperty(string propertyName, object propertyValue, bool destructureObjects)
-                            var enrichPropertyName = ((ConstantExpression)methodArguments[0]).Value.ToString();
-                            var enrichWithArgument = methodArguments[1];
-                            var enrichmentValue = ExtractStringValue(enrichWithArgument);
+                            var enrichPropertyName = ((ConstantExpression)normalizedMethodArguments[0]).Value.ToString();
+                            var enrichWithArgument = normalizedMethodArguments[1];
+                            var enrichmentValue = ConvertExpressionToSettingValue(enrichWithArgument);
                             yield return new List<KeyValuePair<string, string>>
                             {
                                 new KeyValuePair<string, string>(SettingsDirectives.EnrichWithProperty(enrichPropertyName), enrichmentValue)
@@ -105,62 +92,98 @@ namespace Serilog.Settings.ConfigExpression
                         {
                             // method .Enrich.FromLogContext()
                             // or extension method .Enrich.WithBar(param1, param2)
-                            yield return SerializeMethodInvocation(MethodInvocationType.Enrich, methodCall);
+                            yield return SerializeMethodInvocation(MethodInvocationType.Enrich, method, normalizedMethodArguments);
                             continue;
 
                         }
                     case nameof(LoggerConfiguration.WriteTo):
-                        yield return SerializeMethodInvocation(MethodInvocationType.WriteTo, methodCall);
+                        yield return SerializeMethodInvocation(MethodInvocationType.WriteTo, method, normalizedMethodArguments);
                         continue;
                     case nameof(LoggerConfiguration.AuditTo):
-                        yield return SerializeMethodInvocation(MethodInvocationType.AuditTo, methodCall);
+                        yield return SerializeMethodInvocation(MethodInvocationType.AuditTo, method, normalizedMethodArguments);
                         continue;
                     default:
-                        throw new NotSupportedException($"Not supported : LoggerConfiguration.{leftSide.Member.Name}");
+                        throw new NotSupportedException($"Not supported : LoggerConfiguration.{methodTarget.Member.Name}");
                 }
             }
         }
 
-        static List<KeyValuePair<string, string>> SerializeMethodInvocation(MethodInvocationType methodInvocationType, MethodCallExpression methodCall)
+        static List<KeyValuePair<string, string>> SerializeMethodInvocation(MethodInvocationType methodInvocationType, MethodInfo method, IReadOnlyList<Expression> normalizedMethodArguments)
         {
-            var methodArguments = methodCall.Arguments;
-            var method = methodCall.Method;
             var methodName = method.Name;
-            var enrichDirectives = new List<KeyValuePair<string, string>>();
+            var normalizedMethodParameters = ExtractNormalizedParameters(method);
+            var resultingDirectives = new List<KeyValuePair<string, string>>();
             // using  
             var enrichAssembly = method.DeclaringType.GetTypeInfo().Assembly;
             var assemblyShortName = enrichAssembly.GetName().Name;
             if (assemblyShortName != "Serilog")
             {
-                enrichDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.Using(assemblyShortName), $"{enrichAssembly.FullName}"));
+                resultingDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.Using(assemblyShortName), $"{enrichAssembly.FullName}"));
             }
-            var enrichArgs = methodArguments
-                .Zip(method.GetParameters(), (expression, param) => new
+            var args = normalizedMethodArguments
+                .Zip(normalizedMethodParameters, (expression, param) => new
                 {
                     MethodArgument = expression,
                     Parameter = param
                 })
-                .Skip(1) // it's an extension method, the first item is the target 
                 .Select(x => new
                 {
                     ParamName = x.Parameter.Name,
-                    ParamValue = ExtractStringValue(x.MethodArgument)
+                    ParamValue = ConvertExpressionToSettingValue(x.MethodArgument)
                 })
                 .Where(x => x.ParamValue != null);
 
-            var directives2 = enrichArgs.Select(x => new KeyValuePair<string, string>(SettingsDirectives.MethodInvocationParameter(methodInvocationType, methodName, x.ParamName), x.ParamValue)).ToList();
+            var directives2 = args.Select(x => new KeyValuePair<string, string>(SettingsDirectives.MethodInvocationParameter(methodInvocationType, methodName, x.ParamName), x.ParamValue)).ToList();
             if (directives2.Count > 0)
             {
-                enrichDirectives.AddRange(directives2);
+                resultingDirectives.AddRange(directives2);
             }
             else
             {
-                enrichDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.ParameterlessMethodInvocation(methodInvocationType, methodName), ""));
+                resultingDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.ParameterlessMethodInvocation(methodInvocationType, methodName), ""));
             }
-            return enrichDirectives;
+            return resultingDirectives;
         }
 
-        static string ExtractStringValue(Expression exp)
+
+        /// <summary>
+        /// Extract target and parameters in a consistent way, whether method is a "regular" method call
+        /// or an extension method (actually a sttic method where the first parameter is the target)
+        /// </summary>
+        /// <returns></returns>
+        static (MemberExpression target, IReadOnlyList<Expression> normalizedArguments) ExtractNormalizedTargetAndArguments(MethodCallExpression methodCall)
+        {
+            var method = methodCall.Method;
+            MemberExpression leftSide;
+            List<Expression> methodArguments;
+            if (method.IsStatic)
+            {
+                // extension method : the first argument is the target
+                leftSide = (MemberExpression)methodCall.Arguments[0];
+                methodArguments = methodCall.Arguments.Skip(1).ToList();
+            }
+            else
+            {
+                // regular method 
+                leftSide = (MemberExpression)methodCall.Object;
+                methodArguments = methodCall.Arguments.ToList();
+            }
+
+            return (target: leftSide, normalizedArguments: methodArguments.AsReadOnly());
+        }
+
+        static IReadOnlyList<ParameterInfo> ExtractNormalizedParameters(MethodInfo method)
+        {
+            if (method.IsStatic)
+            {
+                // extension method : the first parameter is actually the target !
+                return method.GetParameters().Skip(1).ToList().AsReadOnly();
+            }
+
+            return method.GetParameters().ToList().AsReadOnly();
+        }
+
+        static string ConvertExpressionToSettingValue(Expression exp)
         {
             if (exp == null) throw new ArgumentNullException(nameof(exp));
             switch (exp)
