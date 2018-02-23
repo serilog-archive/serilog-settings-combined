@@ -35,7 +35,7 @@ namespace Serilog
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (loggerConfigExpression == null) throw new ArgumentNullException(nameof(loggerConfigExpression));
 
-            var settingSource = new ConfigExpressionSettingsSource(loggerConfigExpression);
+            var settingSource = new ConfigurationExpressionSettingsSerializer(loggerConfigExpression);
 
             return builder.AddKeyValuePairs(settingSource.GetKeyValuePairs());
         }

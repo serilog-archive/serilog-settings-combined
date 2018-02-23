@@ -9,12 +9,12 @@ using Xunit;
 
 namespace Serilog.Settings.ConfigExpression.Tests
 {
-    public class ConfigExpressionSettingsSourceTests
+    public class ConfigurationExpressionSettingsSerializerTests
     {
         [Fact]
         public void SupportMinimumLevel()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .MinimumLevel.Verbose()
                     .MinimumLevel.Debug()
@@ -40,7 +40,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportMinimumLevelOverrides()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .MinimumLevel.Override("Foo", LogEventLevel.Error)
                     .MinimumLevel.Override("Bar.Qux", LogEventLevel.Warning)
@@ -58,7 +58,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichWithProperty()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .Enrich.WithProperty("Prop1", "Prop1Value", false)
                     .Enrich.WithProperty("Prop2", 42, false)
@@ -80,7 +80,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichWithExtensionMethod()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .Enrich.WithDummyThreadId()
             ).GetKeyValuePairs().ToList();
@@ -98,7 +98,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichFromLogContext()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .Enrich.FromLogContext()
             ).GetKeyValuePairs().ToList();
@@ -114,7 +114,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportWriteTo()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                     lc
                     .WriteTo.DummyRollingFile(
                                 @"C:\toto.log",
@@ -136,7 +136,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportAuditTo()
         {
-            var actual = new ConfigExpressionSettingsSource(lc =>
+            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
                 lc
                     .AuditTo.DummyRollingFile(
                         @"C:\toto.log",

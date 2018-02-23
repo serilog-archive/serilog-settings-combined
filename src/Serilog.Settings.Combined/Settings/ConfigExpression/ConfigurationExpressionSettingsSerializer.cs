@@ -22,11 +22,11 @@ using Serilog.Events;
 
 namespace Serilog.Settings.ConfigExpression
 {
-    class ConfigExpressionSettingsSource
+    class ConfigurationExpressionSettingsSerializer
     {
         MethodCallExpression _methodCallExpression;
 
-        public ConfigExpressionSettingsSource(Expression<Func<LoggerConfiguration, LoggerConfiguration>> expression)
+        public ConfigurationExpressionSettingsSerializer(Expression<Func<LoggerConfiguration, LoggerConfiguration>> expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             _methodCallExpression = expression.Body as MethodCallExpression ?? throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");

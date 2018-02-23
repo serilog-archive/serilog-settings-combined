@@ -11,7 +11,7 @@ using ConfigExpr = System.Linq.Expressions.Expression<System.Func<Serilog.Logger
 
 namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
 {
-    public class ConfigExpressionSettingsSourceSanityTests
+    public class ConfigurationExpressionSettingsSerializerSanityTests
     {
         [Fact]
         public void MinimumLevel()
