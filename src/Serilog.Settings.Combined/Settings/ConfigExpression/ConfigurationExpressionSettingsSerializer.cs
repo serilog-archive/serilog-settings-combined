@@ -28,7 +28,9 @@ namespace Serilog.Settings.ConfigExpression
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var methodCallExpression = expression.Body as MethodCallExpression ?? throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");
-            return WalkFluentMethodCallsFromRightToLeft(methodCallExpression).Reverse().SelectMany(x => x);
+            return WalkFluentMethodCallsFromRightToLeft(methodCallExpression)
+                .Reverse()
+                .SelectMany(x => x);
         }
 
         static IEnumerable<List<KeyValuePair<string, string>>> WalkFluentMethodCallsFromRightToLeft(MethodCallExpression methodCallExp)
@@ -49,9 +51,9 @@ namespace Serilog.Settings.ConfigExpression
                 switch (methodTarget.Member.Name)
                 {
                     case nameof(LoggerConfiguration.MinimumLevel):
+                        // .MinimumLevel.Override(string namespace, LogEventLevel overridenLevel)
                         if (methodName == nameof(LoggerMinimumLevelConfiguration.Override))
                         {
-                            // .MinimumLevel.Override(string namespace, LogEventLevel overridenLevel)
                             var overrideNamespace = ((ConstantExpression)normalizedMethodArguments[0]).Value.ToString();
                             var overrideLevel = ConvertExpressionToSettingValue(normalizedMethodArguments[1]);
 
@@ -61,18 +63,32 @@ namespace Serilog.Settings.ConfigExpression
                             };
                             continue;
                         }
+
+                        // .MinimumLevel.Is(LogEventLevel level)
+                        if (methodName == nameof(LoggerMinimumLevelConfiguration.Is))
+                        {
+                            var minimumLevelIs = ConvertExpressionToSettingValue(normalizedMethodArguments[0]);
+                            yield return new List<KeyValuePair<string, string>>
+                            {
+                                new KeyValuePair<string, string>(SettingsDirectives.MinimumLevel, minimumLevelIs)
+                            };
+                            continue;
+                        }
+
                         // .MinimumLevel.Debug(), MinimumLevel.Information() etc ...
                         if (!Enum.TryParse(methodName, out LogEventLevel minimumLevel))
                             throw new NotImplementedException($"Not supported : MinimumLevel.{methodName}");
+
                         yield return new List<KeyValuePair<string, string>>
                         {
                             new KeyValuePair<string, string>(SettingsDirectives.MinimumLevel, minimumLevel.ToString())
                         };
                         continue;
+                    
                     case nameof(LoggerConfiguration.Enrich):
+                        // .Enrich.WithProperty(string propertyName, object propertyValue, bool destructureObjects)
                         if (methodName == nameof(LoggerEnrichmentConfiguration.WithProperty))
                         {
-                            // .Enrich.WithProperty(string propertyName, object propertyValue, bool destructureObjects)
                             var enrichPropertyName = ((ConstantExpression)normalizedMethodArguments[0]).Value.ToString();
                             var enrichWithArgument = normalizedMethodArguments[1];
                             var enrichmentValue = ConvertExpressionToSettingValue(enrichWithArgument);
@@ -82,18 +98,20 @@ namespace Serilog.Settings.ConfigExpression
                             };
                             continue;
                         }
-                        else
-                        {
-                            // method .Enrich.FromLogContext()
-                            // or extension method .Enrich.WithBar(param1, param2)
-                            yield return SerializeMethodInvocation(MethodInvocationType.Enrich, method, normalizedMethodArguments);
-                            continue;
-
-                        }
+                        
+                        // method .Enrich.FromLogContext()
+                        // or extension method .Enrich.WithBar(param1, param2)
+                        yield return SerializeMethodInvocation(MethodInvocationType.Enrich, method, normalizedMethodArguments);
+                        continue;
+                        
                     case nameof(LoggerConfiguration.WriteTo):
+                        // method .WriteTo.Sink()
+                        // or extension method .WriteTo.CustomSink(param1, param2)
                         yield return SerializeMethodInvocation(MethodInvocationType.WriteTo, method, normalizedMethodArguments);
                         continue;
                     case nameof(LoggerConfiguration.AuditTo):
+                        // method .AuditTo.Sink()
+                        // or extension method .AuditTo.CustomSink(param1, param2)
                         yield return SerializeMethodInvocation(MethodInvocationType.AuditTo, method, normalizedMethodArguments);
                         continue;
                     default:
@@ -127,10 +145,10 @@ namespace Serilog.Settings.ConfigExpression
                 })
                 .Where(x => x.ParamValue != null);
 
-            var directives2 = args.Select(x => new KeyValuePair<string, string>(SettingsDirectives.MethodInvocationParameter(methodInvocationType, methodName, x.ParamName), x.ParamValue)).ToList();
-            if (directives2.Count > 0)
+            var directives = args.Select(x => new KeyValuePair<string, string>(SettingsDirectives.MethodInvocationParameter(methodInvocationType, methodName, x.ParamName), x.ParamValue)).ToList();
+            if (directives.Count > 0)
             {
-                resultingDirectives.AddRange(directives2);
+                resultingDirectives.AddRange(directives);
             }
             else
             {

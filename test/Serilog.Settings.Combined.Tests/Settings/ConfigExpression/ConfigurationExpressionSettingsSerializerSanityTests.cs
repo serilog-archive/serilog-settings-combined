@@ -36,6 +36,28 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
         }
 
         [Fact]
+        public void MinimumLevelIs()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .MinimumLevel.Is(LogEventLevel.Warning);
+
+            LogEvent evt = null;
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc =>
+                {
+                    evt = null;
+                    return lc.WriteTo.Sink(new DelegatingSink(e => evt = e));
+                },
+                test: (testCase, logger) =>
+                {
+                    logger.Write(Some.InformationEvent());
+                    Assert.Null(evt);
+                    logger.Write(Some.WarningEvent());
+                    Assert.NotNull(evt);
+                });
+        }
+
+        [Fact]
         public void MinimumLevelOverride()
         {
             ConfigExpr expressionToTest = lc => lc
@@ -147,8 +169,6 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                     Assert.NotNull(evt.Properties[DummyThreadIdEnricher.PropertyName].LiteralValue());
                 });
         }
-
-
 
         void TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(
             ConfigExpr expressionToTest,
