@@ -47,7 +47,7 @@ namespace TestDummies
             string outputTemplate = null,
             IFormatProvider formatProvider = null)
         {
-            return loggerSinkConfiguration.Sink(new DummyRollingFileAuditSink(), restrictedToMinimumLevel);
+            return loggerSinkConfiguration.Sink(new DummyRollingFileAuditSink(pathFormat, outputTemplate), restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration DummyWithLevelSwitch(

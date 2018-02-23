@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using Serilog.Context;
 using Serilog.Core;
 using Serilog.Events;
@@ -167,6 +168,55 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                     Assert.NotNull(evt);
                     Assert.Equal("MyUserName", evt.Properties[DummyUserNameEnricher.PropertyName].LiteralValue());
                     Assert.NotNull(evt.Properties[DummyThreadIdEnricher.PropertyName].LiteralValue());
+                });
+        }
+
+        [Fact]
+        public void WriteToSinkWithSimpleParams()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .WriteTo.DummyRollingFile(
+                    /*pathFormat*/ @"C:\toto.log",
+                    /*restrictedToMinimumLevel*/ LogEventLevel.Debug,
+                    /*outputTemplate*/ null,
+                    /*formatProvider*/ null);
+
+            DummyRollingFileSink.Reset();
+
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc => lc,
+                test: (testCase, logger) =>
+                {
+                    logger.Write(Some.InformationEvent());
+                    Assert.NotNull(DummyRollingFileSink.Emitted.FirstOrDefault());
+                    Assert.Equal(@"C:\toto.log", DummyRollingFileSink.PathFormat);
+                    Assert.Null(DummyRollingFileSink.OutputTemplate);
+                    DummyRollingFileSink.Reset();
+                });
+        }
+
+        [Fact]
+        public void AuditToSinkWithSimpleParams()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .AuditTo.DummyRollingFile(
+                    /*pathFormat*/ @"C:\toto.log",
+                    /*restrictedToMinimumLevel*/ LogEventLevel.Debug,
+                    /*outputTemplate*/ null,
+                    /*formatProvider*/ null);
+
+            DummyRollingFileAuditSink.Reset();
+
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc => lc,
+                test: (testCase, logger) =>
+                {
+                    
+                    logger.Write(Some.InformationEvent());
+                    Assert.NotNull(DummyRollingFileAuditSink.Emitted.FirstOrDefault());
+                    Assert.Equal(@"C:\toto.log", DummyRollingFileAuditSink.PathFormat);
+                    Assert.Null(DummyRollingFileAuditSink.OutputTemplate);
+                    DummyRollingFileAuditSink.Reset();
                 });
         }
 
