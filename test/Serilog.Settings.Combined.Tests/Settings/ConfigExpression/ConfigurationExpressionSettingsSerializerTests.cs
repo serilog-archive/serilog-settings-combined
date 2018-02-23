@@ -14,15 +14,16 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportMinimumLevel()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .MinimumLevel.Verbose()
-                    .MinimumLevel.Debug()
-                    .MinimumLevel.Information()
-                    .MinimumLevel.Warning()
-                    .MinimumLevel.Error()
-                    .MinimumLevel.Fatal()
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc
+                        .MinimumLevel.Verbose()
+                        .MinimumLevel.Debug()
+                        .MinimumLevel.Information()
+                        .MinimumLevel.Warning()
+                        .MinimumLevel.Error()
+                        .MinimumLevel.Fatal()
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -40,11 +41,12 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportMinimumLevelOverrides()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .MinimumLevel.Override("Foo", LogEventLevel.Error)
-                    .MinimumLevel.Override("Bar.Qux", LogEventLevel.Warning)
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc
+                        .MinimumLevel.Override("Foo", LogEventLevel.Error)
+                        .MinimumLevel.Override("Bar.Qux", LogEventLevel.Warning)
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -58,13 +60,14 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichWithProperty()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .Enrich.WithProperty("Prop1", "Prop1Value", false)
-                    .Enrich.WithProperty("Prop2", 42, false)
-                    .Enrich.WithProperty("Prop3", new Uri("https://www.perdu.com/bar"), false)
-                    .Enrich.WithProperty("Prop4", true, false)
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc
+                        .Enrich.WithProperty("Prop1", "Prop1Value", false)
+                        .Enrich.WithProperty("Prop2", 42, false)
+                        .Enrich.WithProperty("Prop3", new Uri("https://www.perdu.com/bar"), false)
+                        .Enrich.WithProperty("Prop4", true, false)
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -80,10 +83,10 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichWithExtensionMethod()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .Enrich.WithDummyThreadId()
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc.Enrich.WithDummyThreadId()
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -98,10 +101,10 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportEnrichFromLogContext()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .Enrich.FromLogContext()
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc.Enrich.FromLogContext()
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -114,14 +117,14 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportWriteTo()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                    lc
-                    .WriteTo.DummyRollingFile(
-                                @"C:\toto.log",
-                                LogEventLevel.Warning,
-                                null,
-                                null)
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc.WriteTo.DummyRollingFile(
+                            @"C:\toto.log",
+                            LogEventLevel.Warning,
+                            null,
+                            null)
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {
@@ -136,14 +139,15 @@ namespace Serilog.Settings.ConfigExpression.Tests
         [Fact]
         public void SupportAuditTo()
         {
-            var actual = new ConfigurationExpressionSettingsSerializer(lc =>
-                lc
-                    .AuditTo.DummyRollingFile(
-                        @"C:\toto.log",
-                        LogEventLevel.Warning,
-                        null,
-                        null)
-            ).GetKeyValuePairs().ToList();
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc
+                        .AuditTo.DummyRollingFile(
+                            @"C:\toto.log",
+                            LogEventLevel.Warning,
+                            null,
+                            null)
+                ).ToList();
 
             var expected = new List<KeyValuePair<string, string>>()
             {

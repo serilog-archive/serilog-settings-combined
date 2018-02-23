@@ -24,20 +24,14 @@ namespace Serilog.Settings.ConfigExpression
 {
     class ConfigurationExpressionSettingsSerializer
     {
-        MethodCallExpression _methodCallExpression;
-
-        public ConfigurationExpressionSettingsSerializer(Expression<Func<LoggerConfiguration, LoggerConfiguration>> expression)
+        public IEnumerable<KeyValuePair<string, string>> SerializeToKeyValuePairs(Expression<Func<LoggerConfiguration, LoggerConfiguration>> expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            _methodCallExpression = expression.Body as MethodCallExpression ?? throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");
+            var methodCallExpression = expression.Body as MethodCallExpression ?? throw new ArgumentException("Expression's body should be a Method call", $"{nameof(expression)}.{nameof(expression.Body)}");
+            return WalkFluentMethodCallsFromRightToLeft(methodCallExpression).Reverse().SelectMany(x => x);
         }
 
-        public IEnumerable<KeyValuePair<string, string>> GetKeyValuePairs()
-        {
-            return FromRightToLeft(_methodCallExpression).Reverse().SelectMany(x => x);
-        }
-
-        static IEnumerable<List<KeyValuePair<string, string>>> FromRightToLeft(MethodCallExpression methodCallExp)
+        static IEnumerable<List<KeyValuePair<string, string>>> WalkFluentMethodCallsFromRightToLeft(MethodCallExpression methodCallExp)
         {
             if (methodCallExp == null) throw new ArgumentNullException(nameof(methodCallExp));
 
