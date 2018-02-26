@@ -220,6 +220,30 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                 });
         }
 
+        [Fact]
+        public void FilterExpression()
+        {
+            ConfigExpr expressionToTest = lc => lc
+                .Filter.ByExcluding("filter = 'exclude'");
+
+            LogEvent evt = null;
+            TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(expressionToTest,
+                arrange: lc =>
+                {
+                    evt = null;
+                    return lc.WriteTo.Sink(new DelegatingSink(e => evt = e));
+                },
+                test: (testCase, logger) =>
+                {
+
+                    logger.ForContext("filter", "exclude").Information("This will not be logged because filter = exclude is set");
+                    Assert.Null(evt);
+
+                    logger.ForContext("filter", "keep it !").Information("This will be logged because filter will let it through");
+                    Assert.NotNull(evt);
+                });
+        }
+        
         void TestThatReadFromExpressionBehavesTheSameAsLoggerConfig(
             ConfigExpr expressionToTest,
             Func<LoggerConfiguration, LoggerConfiguration> arrange,

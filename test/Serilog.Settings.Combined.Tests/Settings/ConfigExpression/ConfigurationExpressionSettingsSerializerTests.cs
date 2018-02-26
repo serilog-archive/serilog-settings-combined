@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Serilog.Events;
 using Serilog.Settings.ConfigExpression.Tests.Support;
 using TestDummies;
@@ -135,6 +134,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             var expected = new List<KeyValuePair<string, string>>()
             {
+                // no using because method defined in the Core Serilog assembly
                 new KeyValuePair<string, string>("enrich:FromLogContext", "")
             };
 
@@ -205,9 +205,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
         // TODO : support for simple cases of default constructor of an implementation of abstract type
         // TODO : special handling of "default" value of parameters -> do not generate a kvp in that case ?
-        // TODO : support for the static member syntax ....
-        // TODO : support for Filter ??? how ?
-        // TODO : short assembly name in Using statements ? 
+        // TODO : support for the static member syntax .... 
 
     }
 }
