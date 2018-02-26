@@ -117,7 +117,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             var expected = new List<KeyValuePair<string, string>>()
             {
-                new KeyValuePair<string, string>("using:TestDummies", typeof(DummyLoggerConfigurationExtensions).GetTypeInfo().Assembly.FullName),
+                new KeyValuePair<string, string>("using:TestDummies", "TestDummies"),
                 new KeyValuePair<string, string>("enrich:WithDummyThreadId", "")
             };
 
@@ -155,7 +155,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             var expected = new List<KeyValuePair<string, string>>()
             {
-                new KeyValuePair<string, string>("using:TestDummies", typeof(DummyLoggerConfigurationExtensions).GetTypeInfo().Assembly.FullName),
+                new KeyValuePair<string, string>("using:TestDummies", "TestDummies"),
                 new KeyValuePair<string, string>("write-to:DummyRollingFile.pathFormat", @"C:\toto.log"),
                 new KeyValuePair<string, string>("write-to:DummyRollingFile.restrictedToMinimumLevel", "Warning")
             };
@@ -178,7 +178,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             var expected = new List<KeyValuePair<string, string>>()
             {
-                new KeyValuePair<string, string>("using:TestDummies", typeof(DummyLoggerConfigurationExtensions).GetTypeInfo().Assembly.FullName),
+                new KeyValuePair<string, string>("using:TestDummies", "TestDummies"),
                 new KeyValuePair<string, string>("audit-to:DummyRollingFile.pathFormat", @"C:\toto.log"),
                 new KeyValuePair<string, string>("audit-to:DummyRollingFile.restrictedToMinimumLevel", "Warning")
             };
@@ -196,7 +196,7 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             var expected = new List<KeyValuePair<string, string>>()
             {
-                new KeyValuePair<string, string>("using:Serilog.Filters.Expressions", "Serilog.Filters.Expressions, Version=1.1.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10"),
+                new KeyValuePair<string, string>("using:Serilog.Filters.Expressions", "Serilog.Filters.Expressions"),
                 new KeyValuePair<string, string>("filter:ByExcluding.expression", "filter = 'exclude'"),
             };
 

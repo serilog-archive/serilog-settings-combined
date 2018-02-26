@@ -130,12 +130,8 @@ namespace Serilog.Settings.ConfigExpression
             var normalizedMethodParameters = ExtractNormalizedParameters(method);
             var resultingDirectives = new List<KeyValuePair<string, string>>();
             // using  
-            var enrichAssembly = method.DeclaringType.GetTypeInfo().Assembly;
-            var assemblyShortName = enrichAssembly.GetName().Name;
-            if (assemblyShortName != "Serilog")
-            {
-                resultingDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.Using(assemblyShortName), $"{enrichAssembly.FullName}"));
-            }
+            var usingDirectives = GetUsingDirectivesForMethodCall(method);
+            resultingDirectives.AddRange(usingDirectives);
             var args = normalizedMethodArguments
                 .Zip(normalizedMethodParameters, (expression, param) => new
                 {
@@ -159,6 +155,18 @@ namespace Serilog.Settings.ConfigExpression
                 resultingDirectives.Add(new KeyValuePair<string, string>(SettingsDirectives.ParameterlessMethodInvocation(methodInvocationType, methodName), ""));
             }
             return resultingDirectives;
+        }
+
+        static IEnumerable<KeyValuePair<string, string>> GetUsingDirectivesForMethodCall(MethodInfo method)
+        {
+            var containingAssembly = method.DeclaringType.GetTypeInfo().Assembly;
+            if (containingAssembly == typeof(ILogger).GetTypeInfo().Assembly)
+            {
+                yield break;
+            }
+            var assemblyShortName = containingAssembly.GetName().Name;
+
+            yield return new KeyValuePair<string, string>(SettingsDirectives.Using(assemblyShortName), $"{assemblyShortName}");
         }
 
 
