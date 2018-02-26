@@ -84,7 +84,7 @@ namespace Serilog.Settings.ConfigExpression
                             new KeyValuePair<string, string>(SettingsDirectives.MinimumLevel, minimumLevel.ToString())
                         };
                         continue;
-                    
+
                     case nameof(LoggerConfiguration.Enrich):
                         // .Enrich.WithProperty(string propertyName, object propertyValue, bool destructureObjects)
                         if (methodName == nameof(LoggerEnrichmentConfiguration.WithProperty))
@@ -98,12 +98,12 @@ namespace Serilog.Settings.ConfigExpression
                             };
                             continue;
                         }
-                        
+
                         // method .Enrich.FromLogContext()
                         // or extension method .Enrich.WithBar(param1, param2)
                         yield return SerializeMethodInvocation(MethodInvocationType.Enrich, method, normalizedMethodArguments);
                         continue;
-                        
+
                     case nameof(LoggerConfiguration.WriteTo):
                         // method .WriteTo.Sink()
                         // or extension method .WriteTo.CustomSink(param1, param2)
@@ -113,6 +113,10 @@ namespace Serilog.Settings.ConfigExpression
                         // method .AuditTo.Sink()
                         // or extension method .AuditTo.CustomSink(param1, param2)
                         yield return SerializeMethodInvocation(MethodInvocationType.AuditTo, method, normalizedMethodArguments);
+                        continue;
+                    case nameof(LoggerConfiguration.Filter):
+                        // extension method .Filter.ByCustomMethod(param1, param2)
+                        yield return SerializeMethodInvocation(MethodInvocationType.Filter, method, normalizedMethodArguments);
                         continue;
                     default:
                         throw new NotSupportedException($"Not supported : LoggerConfiguration.{methodTarget.Member.Name}");

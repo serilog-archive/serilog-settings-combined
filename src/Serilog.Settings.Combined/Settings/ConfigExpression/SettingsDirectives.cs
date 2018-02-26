@@ -80,6 +80,9 @@ namespace Serilog.Settings.ConfigExpression
                 case MethodInvocationType.AuditTo:
                     directivePrefix = AuditToDirective;
                     break;
+                case MethodInvocationType.Filter:
+                    directivePrefix = FilterDirective;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(invocationType), invocationType, "Unsupported Invocation type");
             }
@@ -92,6 +95,7 @@ namespace Serilog.Settings.ConfigExpression
     {
         WriteTo,
         AuditTo,
-        Enrich
+        Enrich,
+        Filter
     }
 }

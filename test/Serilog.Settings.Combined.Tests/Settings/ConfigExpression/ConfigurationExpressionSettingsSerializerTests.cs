@@ -185,5 +185,29 @@ namespace Serilog.Settings.ConfigExpression.Tests
 
             Assert.Equal(expected.ToList(), actual, new KeyValuePairComparer<string, string>());
         }
+
+        [Fact]
+        public void SupportFilter()
+        {
+            var actual = new ConfigurationExpressionSettingsSerializer()
+                .SerializeToKeyValuePairs(lc =>
+                    lc.Filter.ByExcluding("filter = 'exclude'")
+                ).ToList();
+
+            var expected = new List<KeyValuePair<string, string>>()
+            {
+                new KeyValuePair<string, string>("using:Serilog.Filters.Expressions", "Serilog.Filters.Expressions, Version=1.1.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10"),
+                new KeyValuePair<string, string>("filter:ByExcluding.expression", "filter = 'exclude'"),
+            };
+
+            Assert.Equal(expected.ToList(), actual, new KeyValuePairComparer<string, string>());
+        }
+
+        // TODO : support for simple cases of default constructor of an implementation of abstract type
+        // TODO : special handling of "default" value of parameters -> do not generate a kvp in that case ?
+        // TODO : support for the static member syntax ....
+        // TODO : support for Filter ??? how ?
+        // TODO : short assembly name in Using statements ? 
+
     }
 }

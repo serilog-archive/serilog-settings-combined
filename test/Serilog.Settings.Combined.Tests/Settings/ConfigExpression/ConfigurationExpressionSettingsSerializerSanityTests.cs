@@ -177,7 +177,7 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
             ConfigExpr expressionToTest = lc => lc
                 .WriteTo.DummyRollingFile(
                     /*pathFormat*/ @"C:\toto.log",
-                    /*restrictedToMinimumLevel*/ LogEventLevel.Debug,
+                    /*restrictedToMinimumLevel*/ LogEventLevel.Verbose,
                     /*outputTemplate*/ null,
                     /*formatProvider*/ null);
 
@@ -201,7 +201,7 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
             ConfigExpr expressionToTest = lc => lc
                 .AuditTo.DummyRollingFile(
                     /*pathFormat*/ @"C:\toto.log",
-                    /*restrictedToMinimumLevel*/ LogEventLevel.Debug,
+                    /*restrictedToMinimumLevel*/ LogEventLevel.Verbose,
                     /*outputTemplate*/ null,
                     /*formatProvider*/ null);
 
@@ -211,7 +211,7 @@ namespace Serilog.Settings.Combined.Tests.Settings.ConfigExpression
                 arrange: lc => lc,
                 test: (testCase, logger) =>
                 {
-                    
+
                     logger.Write(Some.InformationEvent());
                     Assert.NotNull(DummyRollingFileAuditSink.Emitted.FirstOrDefault());
                     Assert.Equal(@"C:\toto.log", DummyRollingFileAuditSink.PathFormat);
