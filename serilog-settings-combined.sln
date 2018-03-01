@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3A3B400-AD76-448B-A44B-A5D7314FAC44}"
 EndProject
@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{C789B5
 		assets\Serilog.snk = assets\Serilog.snk
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDummies", "test\TestDummies\TestDummies.csproj", "{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{20DF8798-4764-4213-BCF9-F0B55FABFDE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20DF8798-4764-4213-BCF9-F0B55FABFDE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20DF8798-4764-4213-BCF9-F0B55FABFDE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{DA007207-F261-49ED-9ED1-24F709C53E77} = {E3A3B400-AD76-448B-A44B-A5D7314FAC44}
 		{20DF8798-4764-4213-BCF9-F0B55FABFDE9} = {D4CACEEA-2101-42BB-B3AC-16E685850988}
+		{CCCCC5CA-A2A1-444F-8FD3-19B2823228CB} = {D4CACEEA-2101-42BB-B3AC-16E685850988}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5DBD5279-7498-481B-92C0-829124A6E543}
