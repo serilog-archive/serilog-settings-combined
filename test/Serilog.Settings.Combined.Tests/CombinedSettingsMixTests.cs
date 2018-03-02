@@ -1,14 +1,25 @@
 #if APPSETTINGS
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using Serilog.Debugging;
 using Serilog.Events;
 using Serilog.Tests.Support;
 using TestDummies;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Serilog.Settings.Combined.Tests
 {
     public class CombinedSettingsMixTests
     {
+        readonly ITestOutputHelper _outputHelper;
+
+        public CombinedSettingsMixTests(ITestOutputHelper outputHelper)
+        {
+            _outputHelper = outputHelper;
+        }
+
         [Fact]
         public void CombinedCanMixAndMatchMultipleSources()
         {
@@ -36,6 +47,47 @@ namespace Serilog.Settings.Combined.Tests
             Assert.Equal("DeclaredInInitial", evt.Properties["AppName"].LiteralValue());
             Assert.Equal("DeclaredInConfigFile", evt.Properties["ServerName"].LiteralValue());
             Assert.Equal("AddedAtTheVeryEnd", evt.Properties["ExtraProp"].LiteralValue());
+        }
+
+        [Fact]
+        public void CombinedCanDump()
+        {
+            new LoggerConfiguration()
+                .ReadFrom.Combined(builder => builder
+                    .AddExpression(lc => lc
+                        .MinimumLevel.Verbose()
+                        .Enrich.WithProperty("AppName", "DeclaredInInitial", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile( /*Formatter*/ null, /*pathFormat*/ "overridenInConfigFile", /*restrictedToMinimumLevel*/ LogEventLevel.Verbose)
+                    )
+                    .AddAppSettings(filePath: "Samples/ConfigOverrides.config")
+                    .AddKeyValuePair("enrich:with-property:ExtraProp", "AddedAtTheVeryEnd")
+                    .Dump(kvps =>
+                    {
+                        _outputHelper.WriteLine("====Settings DUMP====");
+                        _outputHelper.WriteLine(String.Join(Environment.NewLine, kvps.Select(kvp => kvp.ToString())));
+                    })
+                );
+        }
+
+        [Fact]
+        public void CombinedCanDumpToSelfLog()
+        {
+            using (TemporarySelfLog.WriteToXunitOutput(_outputHelper))
+            {
+                new LoggerConfiguration()
+                    .ReadFrom.Combined(builder => builder
+                        .AddExpression(lc => lc
+                            .MinimumLevel.Verbose()
+                            .Enrich.WithProperty("AppName", "DeclaredInInitial", /*destructureObjects:*/ false)
+                            .WriteTo.DummyRollingFile( /*Formatter*/ null, /*pathFormat*/ "overridenInConfigFile", /*restrictedToMinimumLevel*/ LogEventLevel.Verbose)
+                        )
+                        .DumpToSelfLog("=== 1-Expression ===")
+                        .AddAppSettings(filePath: "Samples/ConfigOverrides.config")
+                        .DumpToSelfLog("=== 2-AppSettings ===")
+                        .AddKeyValuePair("enrich:with-property:ExtraProp", "AddedAtTheVeryEnd")
+                        .DumpToSelfLog("=== 3-Final ===")
+                    );
+            }
         }
     }
 }
