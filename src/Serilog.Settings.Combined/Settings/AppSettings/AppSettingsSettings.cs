@@ -11,18 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #if APPSETTINGS
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using Serilog.Configuration;
 using Serilog.Debugging;
 
 namespace Serilog.Settings.AppSettings
 {
-    class AppSettingsSettings : ILoggerSettings
+    class AppSettingsSettings
     {
         readonly string _filePath;
         readonly string _settingPrefix;
@@ -33,10 +33,8 @@ namespace Serilog.Settings.AppSettings
             _settingPrefix = settingPrefix == null ? "serilog:" : $"{settingPrefix}:serilog:";
         }
 
-        public void Configure(LoggerConfiguration loggerConfiguration)
+        public IEnumerable<KeyValuePair<string, string>> GetKeyValuePairs()
         {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-
             IEnumerable<KeyValuePair<string, string>> settings;
 
             if (!string.IsNullOrWhiteSpace(_filePath))
@@ -44,10 +42,10 @@ namespace Serilog.Settings.AppSettings
                 if (!File.Exists(_filePath))
                 {
                     SelfLog.WriteLine("The specified configuration file `{0}` does not exist and will be ignored.", _filePath);
-                    return;
+                    return Enumerable.Empty<KeyValuePair<string, string>>();
                 }
 
-                var map = new ExeConfigurationFileMap {ExeConfigFilename = _filePath};
+                var map = new ExeConfigurationFileMap { ExeConfigFilename = _filePath };
                 var config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
                 settings = config.AppSettings.Settings
                     .Cast<KeyValueConfigurationElement>()
@@ -65,7 +63,7 @@ namespace Serilog.Settings.AppSettings
                     k.Key.Substring(_settingPrefix.Length),
                     Environment.ExpandEnvironmentVariables(k.Value)));
 
-            loggerConfiguration.ReadFrom.KeyValuePairs(pairs);
+            return pairs;
         }
     }
 }
