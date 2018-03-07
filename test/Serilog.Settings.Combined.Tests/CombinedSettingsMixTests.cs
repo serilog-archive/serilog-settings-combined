@@ -17,10 +17,11 @@ namespace Serilog.Settings.Combined.Tests
             // .... and override a few things from config files
             var log = new LoggerConfiguration()
                 .ReadFrom.Combined(builder => builder
-                    .AddKeyValuePair("minimum-level", "Verbose")
-                    .AddKeyValuePair("enrich:with-property:AppName", "DeclaredInInitial")
-                    .AddKeyValuePair("using:TestDummies" ,"TestDummies")
-                    .AddKeyValuePair("write-to:DummyRollingFile.pathFormat", "DeclaredInInitial")
+                    .AddExpression(lc => lc
+                        .MinimumLevel.Verbose()
+                        .Enrich.WithProperty("AppName", "DeclaredInInitial", /*destructureObjects:*/ false)
+                        .WriteTo.DummyRollingFile(/*Formatter*/ null, /*pathFormat*/ "overridenInConfigFile", /*restrictedToMinimumLevel*/ LogEventLevel.Verbose)
+                    )
                     .AddAppSettings(filePath: "Samples/ConfigOverrides.config")
                     .AddKeyValuePair("enrich:with-property:ExtraProp", "AddedAtTheVeryEnd")
                 )
