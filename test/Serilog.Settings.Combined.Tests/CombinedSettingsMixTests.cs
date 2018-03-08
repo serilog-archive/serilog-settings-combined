@@ -1,6 +1,5 @@
 #if APPSETTINGS
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Serilog.Debugging;
 using Serilog.Events;
@@ -50,7 +49,7 @@ namespace Serilog.Settings.Combined.Tests
         }
 
         [Fact]
-        public void CombinedCanDump()
+        public void CombinedSettingsCanBeInspected()
         {
             new LoggerConfiguration()
                 .ReadFrom.Combined(builder => builder
@@ -61,33 +60,12 @@ namespace Serilog.Settings.Combined.Tests
                     )
                     .AddAppSettings(filePath: "Samples/ConfigOverrides.config")
                     .AddKeyValuePair("enrich:with-property:ExtraProp", "AddedAtTheVeryEnd")
-                    .Dump(kvps =>
+                    .Inspect(kvps =>
                     {
                         _outputHelper.WriteLine("====Settings DUMP====");
                         _outputHelper.WriteLine(String.Join(Environment.NewLine, kvps.Select(kvp => kvp.ToString())));
                     })
                 );
-        }
-
-        [Fact]
-        public void CombinedCanDumpToSelfLog()
-        {
-            using (TemporarySelfLog.WriteToXunitOutput(_outputHelper))
-            {
-                new LoggerConfiguration()
-                    .ReadFrom.Combined(builder => builder
-                        .AddExpression(lc => lc
-                            .MinimumLevel.Verbose()
-                            .Enrich.WithProperty("AppName", "DeclaredInInitial", /*destructureObjects:*/ false)
-                            .WriteTo.DummyRollingFile( /*Formatter*/ null, /*pathFormat*/ "overridenInConfigFile", /*restrictedToMinimumLevel*/ LogEventLevel.Verbose)
-                        )
-                        .DumpToSelfLog("=== 1-Expression ===")
-                        .AddAppSettings(filePath: "Samples/ConfigOverrides.config")
-                        .DumpToSelfLog("=== 2-AppSettings ===")
-                        .AddKeyValuePair("enrich:with-property:ExtraProp", "AddedAtTheVeryEnd")
-                        .DumpToSelfLog("=== 3-Final ===")
-                    );
-            }
         }
     }
 }
