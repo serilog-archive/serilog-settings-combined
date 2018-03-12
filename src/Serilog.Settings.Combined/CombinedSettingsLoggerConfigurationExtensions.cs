@@ -29,11 +29,11 @@ namespace Serilog
         /// <param name="lsc">The settings configuration object.</param>
         /// <param name="combine">a callback that allows to add Sources of settings to the configuration</param> 
         /// <returns>Configuration object allowing method chaining.</returns> 
-        public static LoggerConfiguration Combined(this LoggerSettingsConfiguration lsc, Func<ICombinedSettingsBuilder, ICombinedSettingsBuilder> combine)
+        public static LoggerConfiguration Combined(this LoggerSettingsConfiguration lsc, Func<CombinedSettingsBuilder, CombinedSettingsBuilder> combine)
         {
             if (combine == null) throw new ArgumentNullException(nameof(combine));
 
-            var builder = (CombinedSettingsBuilder)combine(new CombinedSettingsBuilder());
+            var builder = combine(new CombinedSettingsBuilder());
             var combinedSettings = builder.BuildSettings();
             return lsc.KeyValuePairs(combinedSettings);
         }

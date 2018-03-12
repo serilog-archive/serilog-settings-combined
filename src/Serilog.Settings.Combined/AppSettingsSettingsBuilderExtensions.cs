@@ -36,7 +36,7 @@ namespace Serilog
         /// <param name="filePath">Specify the path to an alternative .config file location. If the file does not exist it will be ignored.
         /// By default, the current application's configuration file will be used.</param>
         /// <returns>An object allowing configuration to continue.</returns>
-        public static ICombinedSettingsBuilder AddAppSettings(this ICombinedSettingsBuilder builder, string settingPrefix = null, string filePath = null)
+        public static CombinedSettingsBuilder AddAppSettings(this CombinedSettingsBuilder builder, string settingPrefix = null, string filePath = null)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             var appSettings = new AppSettingsSettings(settingPrefix, filePath);

@@ -18,14 +18,23 @@ using System.Collections.Generic;
 namespace Serilog.Settings.Combined
 {
     /// <summary>
-    /// Builder to combine multiple collections of settings into one
+    /// A builder that allows to combine sources of key-value settings in a fluent way.
     /// </summary>
-    public sealed class CombinedSettingsBuilder : ICombinedSettingsBuilder
+    public sealed class CombinedSettingsBuilder
     {
         List<IEnumerable<KeyValuePair<string, string>>> _settings = new List<IEnumerable<KeyValuePair<string, string>>>();
 
-        /// <inheritdoc />
-        public ICombinedSettingsBuilder AddKeyValuePairs(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        internal CombinedSettingsBuilder()
+        {
+            
+        }
+
+        /// <summary>
+        /// Adds a series of key-value settings to the combined configuration
+        /// </summary>
+        /// <param name="keyValuePairs">the key-value pairs to add</param>
+        /// <returns>a <see cref="CombinedSettingsBuilder"/> with the added source to allow chaining</returns>
+        public CombinedSettingsBuilder AddKeyValuePairs(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
             if (keyValuePairs == null) throw new ArgumentNullException(nameof(keyValuePairs));
 
@@ -33,14 +42,23 @@ namespace Serilog.Settings.Combined
             return this;
         }
 
-        /// <inheritdoc />
-        public ICombinedSettingsBuilder AddKeyValuePair(KeyValuePair<string, string> kvp)
+        /// <summary>
+        /// Adds a single key-value setting to the combined configuration
+        /// </summary>
+        /// <param name="kvp">a key-value setting</param>
+        /// <returns>the builder object to allow chaining</returns>
+        public CombinedSettingsBuilder AddKeyValuePair(KeyValuePair<string, string> kvp)
         {
             return AddKeyValuePairs(new List<KeyValuePair<string, string>> { kvp });
         }
 
-        /// <inheritdoc />
-        public ICombinedSettingsBuilder AddKeyValuePair(string key, string value)
+        /// <summary>
+        /// Adds a single key-value setting to the combined configuration
+        /// </summary>
+        /// <param name="key">the key of the setting</param>
+        /// <param name="value">the value of the setting</param>
+        /// <returns>the builder object to allow chaining</returns>
+        public CombinedSettingsBuilder AddKeyValuePair(string key, string value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -51,7 +69,7 @@ namespace Serilog.Settings.Combined
         /// Creates a collection of settings by concatenating all the key-value settings passed in previously
         /// </summary>
         /// <returns>The result of combining all the previous settings</returns>
-        public IEnumerable<KeyValuePair<string, string>> BuildSettings()
+        internal IEnumerable<KeyValuePair<string, string>> BuildSettings()
         {
             foreach (var source in _settings)
             {

@@ -20,7 +20,7 @@ using Serilog.Settings.ConfigExpression;
 namespace Serilog
 {
     /// <summary>
-    /// Extensions to allow combination of settings originating from config file appSettings
+    /// Extensions to allow combination of settings originating a LoggerConfiguration expression
     /// </summary>
     public static class ConfigExpressionSettingsBuilderExtensions
     {
@@ -30,7 +30,7 @@ namespace Serilog
         /// <param name="builder">The combined settings builder</param>
         /// <param name="loggerConfigExpression">A configuration expression</param>
         /// <returns>An object allowing configuration to continue.</returns>
-        public static ICombinedSettingsBuilder AddExpression(this ICombinedSettingsBuilder builder, Expression<Func<LoggerConfiguration, LoggerConfiguration>> loggerConfigExpression)
+        public static CombinedSettingsBuilder AddExpression(this CombinedSettingsBuilder builder, Expression<Func<LoggerConfiguration, LoggerConfiguration>> loggerConfigExpression)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (loggerConfigExpression == null) throw new ArgumentNullException(nameof(loggerConfigExpression));
